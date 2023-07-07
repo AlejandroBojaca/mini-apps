@@ -1,0 +1,17 @@
+name: Scheduled income types check
+
+on:
+  schedule:
+    - cron: "0 0 */14 * *"
+
+jobs:
+  check-income-types:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Fetch and compare income types
+        run: |
+          curl -X PUT http://localhost:5000/prevIncomeTypes
