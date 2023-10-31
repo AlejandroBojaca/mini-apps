@@ -1,6 +1,6 @@
 const axios = require("axios");
 const fs = require("fs");
-// const json2csv = require("json2csv");
+const { Parser } = require("json2csv");
 
 let url = (portfolioId) =>
   `https://api.tradelink.pro/portfolio/get?portfolioId=${portfolioId}&extended=1&step=day&lang=en`;
@@ -185,3 +185,22 @@ const portfolios = [
 [{ _id: "4a4f5ea0-7960-4cc4-a9cf-ae0ff1c32c65" }].forEach((portfolio) =>
   getData(portfolio._id)
 );
+
+let myCars = {
+  car: {
+    name: ["Audi"],
+    price: ["40000"],
+    color: ["blue"],
+  },
+};
+
+let fields = ["car.name", "car.price", "car.color"];
+
+const parser = new Parser({
+  fields,
+  unwind: ["car.name", "car.price", "car.color"],
+});
+
+const csv = parser.parse(myCars);
+
+console.log("output", csv);
