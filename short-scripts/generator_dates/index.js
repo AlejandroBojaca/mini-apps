@@ -32,11 +32,10 @@ const schema = {
 };
 
 const startDate = moment.utc("2022-01-01");
-const array = new Array(3000).fill().map((el, i) => {
+const array = new Array(1000).fill().map((el, i) => {
   const date = moment(startDate).add(i, "day");
-  console.log(date, i);
   const obj = Object.assign({}, schema);
-  obj.date = date;
+  obj.date = { $date: date.format() };
   return obj;
 });
 
