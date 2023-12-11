@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "moment": "^2.29.4"
+    "axios": "^1.6.2",
+    "moment": "^2.29.4",
+    "request": "^2.88.2"
   }
 }

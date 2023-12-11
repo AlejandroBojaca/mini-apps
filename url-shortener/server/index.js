@@ -1,70 +1,72 @@
 const express = require("express");
-const mongoose = require("mongoose");
-const { object, string, url, date, InferType } = require("yup");
+const morgan = require("morgan");
+const yup = require("yup");
 const { nanoid } = require("nanoid");
 
-mongoose.connect("mongodb://localhost/url-shortener");
+const mongoose = require("mongoose");
 
-const UrlSchema = mongoose.Schema({
-  url: String,
-  slug: String,
-});
-
-const Url = new mongoose.model("urls", UrlSchema);
-
-const morgan = require("morgan");
-
+mongoose.connect("mongodb://localhost/url_shortener");
 const app = express();
-app.enable("trust proxy");
 
-app.use(express.static("./public"));
-app.use(express.json());
 app.use(morgan("tiny"));
+app.use(express.static("public"));
+app.use(express.json());
 
-const urlSchema = object({
-  url: string().trim().url().required(),
-  slug: string()
-    .trim()
-    .matches(/^[\w\-]+$/i),
+const urlValidationSchema = yup.object({
+  url: yup.string().url().required(),
+  slug: yup.string().matches(/^[\w\-]+$/i),
 });
 
-app.post("/url", async (req, res) => {
-  console.log(req.body);
-  let { url, slug } = req.body;
-  console.log(url, slug);
+const urlSchema = mongoose.Schema({
+  url: { type: String, required: true },
+  slug: { type: String, required: true },
+});
+
+const Url = mongoose.model("urls", urlSchema);
+
+app.post("/url", async (req, res, next) => {
+  let { slug, url } = req.body;
+
   try {
-    console.log(url, slug);
-    await urlSchema.validate({ url, slug });
+    await urlValidationSchema.validate({ slug, url });
 
     if (slug === "") {
       slug = nanoid(5);
     }
 
-    const url = new Url({ url, slug });
+    const newUrl = new Url({ slug, url });
+    newUrl.save();
 
     res.json({
-      msg: "OK",
       slug,
       url,
     });
-  } catch (e) {
-    console.log(e);
-    res.json({
-      error: e,
-    });
+  } catch (error) {
+    next(error);
   }
 });
 
-app.get("/:slug", (req, res) => {
-  const { slug } = req.params;
-
-  const url = Url.find({ slug });
-
+app.get("/:id", async (req, res, next) => {
+  const { id: slug } = req.params;
+  const url = await Url.findOne({ slug });
   if (url !== null) {
     res.redirect(url.url);
+  } else {
+    next(new Error("No such slug found"));
   }
+});
+
+app.use((error, req, res, next) => {
+  if (error.status) {
+    res.status(error.status);
+  } else {
+    res.status(500);
+  }
+  res.json({
+    message: error.message,
+    stack: error.stack,
+  });
 });
 
 const PORT = 3000;
-
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
