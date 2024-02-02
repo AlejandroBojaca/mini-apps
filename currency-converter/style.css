@@ -1,0 +1,43 @@
+:root {
+  --primary-color: #5fbaa7;
+}
+
+.symbol {
+  height: 100px;
+  width: 100px;
+}
+
+.main-container {
+  margin-top: 5rem;
+  max-width: 40rem;
+}
+
+.inner-container {
+  width: 100%;
+}
+
+h3,
+h7 {
+  color: var(--primary-color);
+}
+
+.input-field {
+  width: 150px;
+}
+
+.btn {
+  color: #fff;
+  background: var(--primary-color);
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+.left-in-container {
+  margin-left: auto;
+}
+
+.dollar-symbol {
+  background-color: var(--primary-color);
+}
