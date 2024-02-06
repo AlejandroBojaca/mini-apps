@@ -1,3 +1,4 @@
+//TODO Add wrong letters
 const figureParts = document.querySelectorAll(".figure-part");
 const wrongLetters = document.getElementById("wrong-letters");
 const popup = document.getElementById("popup-container");
