@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <title>Meal Finder</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <div id="app">
+      <div class="container">
+        <h1>Meal Finder</h1>
+        <div class="flex">
+          <form class="flex" @submit.prevent="searchFood">
+            <input
+              v-model="food"
+              type="text"
+              id="search"
+              placeholder="Search for meals or keywords"
+            />
+            <button class="search-btn" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </form>
+          <button class="random-btn" @click="searchFood(true)" id="random">
+            <i class="fas fa-random"></i>
+          </button>
+        </div>
+
+        <div id="result-heading" class="result-heading" v-if="meals.length">
+          Results for: {{ food }}
+        </div>
+        <div id="meals" class="meals">
+          <template v-if="meals.length" v-for="meal in meals">
+            <div class="meal" @click="selectMeal(meal)">
+              <img :src="meal.strMealThumb" :alt="meal.strMeal" />
+              <div class="meal-info">
+                <h3>{{ meal.strMeal }}</h3>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div v-if="selectedMeal.strMeal" id="single-meal">
+          <div class="single-meal">
+            <h1>{{ selectedMeal.strMeal }}</h1>
+            <img :src="selectedMeal.strMealThumb" :alt="selectedMeal.strMeal" />
+            <div class="single-meal-info">
+              <p>{{ selectedMeal.strCategory }}</p>
+              <p>{{ selectedMeal.strArea }}</p>
+            </div>
+            <div class="main">
+              <h2>Meal Instructions</h2>
+              <p>{{ selectedMeal.strInstructions }}</p>
+              <h2>Ingredients</h2>
+              <ul>
+                <template v-for="ingredient in selectedMeal.ingredients">
+                  <li>{{ ingredient }}</li>
+                </template>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
