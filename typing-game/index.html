@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="style.css" />
+    <title>My Blog</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <div id="app">
+      <button id="settings-btn" class="settings-btn">
+        <i class="fas fa-cog"></i>
+      </button>
+
+      <div id="settings" class="settings">
+        <form id="settings-form">
+          <div>
+            <label for="difficulty">Difficulty</label>
+            <select v-model="difficulty" id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="container">
+        <template v-if="!displayScore">
+          <h2>👩‍💻 Speed Typer 👨‍💻</h2>
+          <small>Type the following:</small>
+
+          <h1 id="word">{{ word }}</h1>
+
+          <input
+            type="text"
+            id="text"
+            v-model="input"
+            autocomplete="off"
+            placeholder="Type the word here..."
+            autofocus
+          />
+
+          <p class="time-container">
+            Time left: <span id="time">{{ seconds }}s</span>
+          </p>
+
+          <p class="score-container">
+            Score: <span id="score">{{ score }}</span>
+          </p>
+        </template>
+        <template v-else>
+          <div id="end-game-container" class="end-game-container">
+            <h1>Time ran out</h1>
+            <p>Your final score is {{ score }}</p>
+            <button onclick="location.reload()">Reload</button>
+          </div>
+        </template>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
