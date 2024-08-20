@@ -1,0 +1,7 @@
+# Create Dockerfile that includes python excecuter
+
+# Build image
+docker build -t script:latest .
+
+# Run container
+docker run script:latest

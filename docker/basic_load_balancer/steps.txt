@@ -1,0 +1,11 @@
+# pull caddy image
+docker pull caddy
+
+# create network
+docker network create caddytest
+
+# Add Caddyfile with loadbalancer config
+
+# add server and run caddy container for both index.html files
+docker run -p 8080:80 -v $PWD/index1.html:usr/share/caddy/index.html caddy
+

@@ -1,0 +1,9 @@
+{
+  "chirps": {
+    "1": {
+      "id": 1,
+      "body": "This is a **** opinion I need to share with the world"
+    }
+  },
+  "users": {}
+}

@@ -31,24 +31,23 @@ func main() {
 }
 
 func handlePage(w http.ResponseWriter, r *http.Request) {
-	// Get the PORT environment variable
-	port := os.Getenv("PORT")
+	// // Get the PORT environment variable
+	// port := os.Getenv("PORT")
 
-	// If PORT is not set, use a default value
-	if port == "" {
-		port = "not set"
-	}
+	// // If PORT is not set, use a default value
+	// if port == "" {
+	// 	port = "not set"
+	// }
 
-	// Create the HTML content with the PORT value
-	page := fmt.Sprintf(`<html>
+	// // Create the HTML content with the PORT value
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(200)
+	const page = `<html>
 <head></head>
 <body>
-	<p>Hello from Docker! I'm a Go server running on port %s.</p>
+	<p> Hi Docker, I pushed a new version </p>
 </body>
-</html>`, port)
-
-	// Set the content type and write the HTML content
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
+</html>
+`
 	w.Write([]byte(page))
 }

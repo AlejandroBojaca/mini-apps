@@ -1,0 +1,10 @@
+# Create go server
+
+# Build go server 
+GOOS=linux GOARCH=amd64 go build
+
+# Create image using Dockerfile
+docker build . -t goserver:latest
+
+# Run docker image
+docker run -p 8080:80 goserver:latest
