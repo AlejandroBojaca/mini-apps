@@ -1,9 +1,15 @@
 {
-  "chirps": {
-    "1": {
+  "chirps": {},
+  "users": {
+    "example@example.com": {
       "id": 1,
-      "body": "This is a **** opinion I need to share with the world"
+      "email": "example@example.com",
+      "password": "$2b$10$q2KtuB0OfvlXPjyImy1v4Ob0hbj9jivFrRCdlf3C4w4uyRyyy1PVS"
+    },
+    "saul@bettercall.com": {
+      "id": 3,
+      "email": "saul@bettercall.com",
+      "password": "$2b$10$6cbTQnX2/PiDTl272Y9kJedPx6FzczNWzem6LtN9Xqfh7pepyCSQC"
     }
-  },
-  "users": {}
+  }
 }
