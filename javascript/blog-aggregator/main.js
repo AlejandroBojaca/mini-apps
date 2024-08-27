@@ -3,6 +3,7 @@ const cors = require('cors');
 const pg = require('pg');
 const { v4 : uuidv4 } = require('uuid')
 const { createHash } = require('crypto')
+const worker = require('./worker')
 require("dotenv").config();
 
 const app = express();
@@ -11,11 +12,6 @@ const { Client } = pg
 
 app.use(cors());
 app.use(express.json());
-
-app.get('/api/endpoint', (req, res) => {
-    console.log('here')
-    res.send('OK')
-})
 
 app.post('/v1/users', async (req, res) => {
     const { name } = req.body;
@@ -256,4 +252,6 @@ app.use((req, res, next) => {
 app.listen(8080, () => {
     console.log("Listening on port 8080")
 })
+
+worker();
 
