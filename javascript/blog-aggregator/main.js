@@ -245,6 +245,35 @@ app.delete('/v1/feed_follows/:feed_id', async (req, res) => {
     }
 });
 
+app.get('/v1/posts', async (req, res) => {
+    const { id: user_id } = req.user;
+    const { limit } = req.query || { limit: 100 };
+
+    const client = new Client();
+    try {
+        await client.connect();
+        const query = {
+            text: `SELECT p.* FROM users u
+                INNER JOIN feeds f
+                ON u.id = f.user_id
+                INNER JOIN posts p
+                ON f.id = p.feed_id
+                WHERE u.id = $1
+                LIMIT $2
+            `,
+            values: [user_id, limit]
+        }
+        const result = await client.query(query);
+
+        res.status(200).send(result.rows);
+    } catch (err) {
+        console.error('Error executing query', err.stack);
+        res.status(500).send('Internal Server Error');
+    } finally {
+        await client.end();
+    }
+})
+
 app.use((req, res, next) => {
     res.status(404).send('Not found');
 })
