@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synergychat-web
+  namespace: default
+  labels:
+    app: synergychat-web
+spec:
+  selector:
+    matchLabels:
+      app: synergychat-web
+  template:
+    metadata:
+      labels:
+        app: synergychat-web
+    spec:
+      containers:
+        - name: synergychat-web
+          image: bootdotdev/synergychat-web:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: WEB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: web-config
+                  key: WEB_PORT
+            - name: API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: web-config
+                  key: API_URL
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

@@ -4,3 +4,4 @@ metadata:
   name: synergychat-api-configmap
 data:
   API_PORT: "8080"
+  CRAWLER_BASE_URL: "http://crawler-service.crawler.svc.cluster.local"
