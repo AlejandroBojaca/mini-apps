@@ -12,15 +12,14 @@ async function main() {
     const connection = await amqp.connect(connectionString);
 
     const channel = await connection.createChannel();
-    const PlayingState = new models.PlayingState(true);
+    const PlayingState = new models.PlayingState();
 
     let continueLoop = true;
     while (continueLoop) {
-      const word = gamelogic.getInput();
-      if (!word || word.length === 0) continue;
-      switch (word) {
+      const word = await gamelogic.getInput();
+      if (word.length === 1 && word[0] === "") continue;
+      switch (word[0]) {
         case "pause":
-          console.log("sending pause message");
           PlayingState.changeState(true);
           publishJSON(
             channel,
@@ -28,9 +27,9 @@ async function main() {
             routing.PAUSE_KEY,
             PlayingState
           );
+          console.log("sending pause message");
           break;
         case "resume":
-          console.log("sending resume message");
           PlayingState.changeState(false);
           publishJSON(
             channel,
@@ -38,6 +37,7 @@ async function main() {
             routing.PAUSE_KEY,
             PlayingState
           );
+          console.log("sending resume message");
           break;
         case "quit":
           console.log("exiting...");

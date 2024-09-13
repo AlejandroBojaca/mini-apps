@@ -1,8 +1,8 @@
 // routing.js
 
 class PlayingState {
-  constructor(isPaused) {
-    this.isPaused = isPaused;
+  constructor() {
+    this.isPaused = false;
   }
 
   changeState(state = false) {

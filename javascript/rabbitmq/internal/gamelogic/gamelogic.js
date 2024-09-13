@@ -1,6 +1,7 @@
-const readline = require("node:readline");
 const { randomInt } = require("crypto");
-const prompt = require("prompt-sync")({ sigint: true });
+const readline = require("readline");
+
+// const prompt = require("prompt-sync")({ sigint: true });
 
 function printClientHelp() {
   console.log("Possible commands:");
@@ -18,15 +19,15 @@ function printClientHelp() {
   console.log("* help");
 }
 
-function clientWelcome() {
+async function clientWelcome() {
   console.log("Welcome to the Peril client!");
   console.log("Please enter your username:");
-  const words = getInput();
+  const words = await getInput();
   if (words.length === 0) {
     console.error("You must enter a username. Goodbye.");
     return [null, new Error("you must enter a username. goodbye")];
   }
-  const username = words;
+  const username = words[0];
   console.log(`Welcome, ${username}!`);
   printClientHelp();
   return [username, null];
@@ -41,7 +42,30 @@ function printServerHelp() {
 }
 
 function getInput() {
-  return prompt("> ").split(" ")[0];
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  // const requestInput = async function () {
+  //   const url = await new Promise((resolve) => {
+  //     rl.question("Please type url: ", resolve);
+  //   });
+  // };
+
+  // return requestInput();
+
+  const requestInput = () => {
+    return new Promise((resolve) => {
+      rl.question("> ", (input) => {
+        rl.close();
+        const inputArray = input.split(" "); // Split input by spaces into an array
+        resolve(inputArray);
+      });
+    });
+  };
+
+  return requestInput();
 }
 
 function getMaliciousLog() {
@@ -61,38 +85,6 @@ function printQuit() {
   console.log("I hate this game! (╯°□°)╯︵ ┻━┻");
 }
 
-class GameState {
-  constructor(paused, player) {
-    this.paused = paused;
-    this.player = player;
-  }
-
-  isPaused() {
-    return this.paused;
-  }
-
-  getPlayerSnap() {
-    return this.player;
-  }
-
-  commandStatus() {
-    if (this.isPaused()) {
-      console.log("The game is paused.");
-      return;
-    } else {
-      console.log("The game is not paused.");
-    }
-
-    const player = this.getPlayerSnap();
-    console.log(
-      `You are ${player.username}, and you have ${player.units.size} units.`
-    );
-    for (const [id, unit] of player.units.entries()) {
-      console.log(`* ${id}: ${unit.location}, ${unit.rank}`);
-    }
-  }
-}
-
 module.exports = {
   printClientHelp,
   clientWelcome,
@@ -100,5 +92,4 @@ module.exports = {
   getInput,
   getMaliciousLog,
   printQuit,
-  GameState,
 };
