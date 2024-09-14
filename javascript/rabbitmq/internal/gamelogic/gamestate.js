@@ -53,7 +53,7 @@ class GameState {
   constructor(username) {
     this.player = {
       username: username,
-      units: new Map(), // equivalent to map[int]Unit
+      units: [], // equivalent to map[int]Unit
     };
     this.paused = false;
   }
@@ -83,19 +83,22 @@ class GameState {
   }
 
   addUnit(unit) {
-    this.player.units.set(unit.id, unit);
+    this.player.units.push({ ...unit });
   }
 
   removeUnitsInLocation(location) {
-    for (const [id, unit] of this.player.units.entries()) {
-      if (unit.location === location) {
-        this.player.units.delete(id);
+    for (const { id, location: uLocation } of this.player.units) {
+      if (uLocation === location) {
+        this.player.units = this.player.units.filter(
+          ({ id: uId }) => uId !== id
+        );
       }
     }
   }
 
   updateUnit(unit) {
-    this.player.units.set(unit.id, unit);
+    let u = this.player.units.find(({ id: uId }) => uId === unit.id);
+    u = unit;
   }
 
   getUsername() {
@@ -103,19 +106,18 @@ class GameState {
   }
 
   getUnitsSnap() {
-    return Array.from(this.player.units.values());
+    return this.player.units;
   }
 
   getUnit(id) {
-    const unit = this.player.units.get(id);
+    const unit = this.player.units.find(({ id: uId }) => uId === id);
     return [unit, unit !== undefined];
   }
 
   getPlayerSnap() {
-    const unitsCopy = new Map(this.player.units);
     return {
       username: this.player.username,
-      units: unitsCopy,
+      units: this.player.units,
     };
   }
 
@@ -129,10 +131,10 @@ class GameState {
 
     const player = this.getPlayerSnap();
     console.log(
-      `You are ${player.username}, and you have ${player.units.size} units.`
+      `You are ${player.username}, and you have ${player.units.length} units.`
     );
-    for (const [id, unit] of player.units.entries()) {
-      console.log(`* ${id}: ${unit.location}, ${unit.rank}`);
+    for (const { id, location, rank } of player.units) {
+      console.log(`* ${id}: ${location}, ${rank}`);
     }
   }
 
@@ -209,7 +211,7 @@ class GameState {
 
     const move = {
       toLocation: newLocation,
-      units: Array.from(this.player.units.values()),
+      units: Array.from(this.player.units),
       player: this.getPlayerSnap(),
     };
     console.log(`Moved ${move.units.length} units to ${move.toLocation}`);
@@ -262,7 +264,8 @@ class GameState {
       return [WarOutcome.NotInvolved, "", ""];
     }
 
-    const overlappingLocation = getOverlappingLocation(
+    console.log({ rw });
+    const overlappingLocation = this.getOverlappingLocation(
       rw.attacker,
       rw.defender
     );
@@ -327,4 +330,4 @@ class GameState {
   }
 }
 
-module.exports = GameState;
+module.exports = { GameState, MoveOutcome, WarOutcome };

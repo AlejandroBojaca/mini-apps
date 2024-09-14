@@ -21,7 +21,7 @@ async function main() {
       switch (word[0]) {
         case "pause":
           PlayingState.changeState(true);
-          publishJSON(
+          await publishJSON(
             channel,
             routing.EXCHANGE_PERIL_DIRECT,
             routing.PAUSE_KEY,
@@ -31,7 +31,7 @@ async function main() {
           break;
         case "resume":
           PlayingState.changeState(false);
-          publishJSON(
+          await publishJSON(
             channel,
             routing.EXCHANGE_PERIL_DIRECT,
             routing.PAUSE_KEY,

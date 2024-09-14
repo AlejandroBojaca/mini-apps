@@ -1,11 +1,11 @@
 const gamedata = require("./gamedata");
 const gamelogic = require("./gamelogic");
-const GameState = require("./gameState");
+const gameState = require("./gamestate");
 const logs = require("./logs");
 
 module.exports = {
   ...gamedata,
   ...gamelogic,
   ...logs,
-  GameState,
+  ...gameState,
 };

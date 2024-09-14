@@ -1,3 +1,9 @@
+const AckType = {
+  Ack: "Ack",
+  NackRequeue: "NackRequeue",
+  NackDiscard: "NackDiscard",
+};
+
 async function DeclareAndBind(
   connection,
   exchange,
@@ -26,7 +32,7 @@ async function publishJSON(channel, exchange, key, val) {
   try {
     const jsonBytes = Buffer.from(JSON.stringify(val), "utf-8");
 
-    await channel.publish(exchange, key, jsonBytes, {
+    const res = await channel.publish(exchange, key, jsonBytes, {
       contentType: "application/json",
       persistent: false,
     });
@@ -34,6 +40,8 @@ async function publishJSON(channel, exchange, key, val) {
     console.log(
       `Message published to exchange ${exchange} with routing key ${key}`
     );
+
+    return res;
   } catch (err) {
     console.error("Failed to publish message:", err);
     throw err;
@@ -56,15 +64,35 @@ async function SubscribeJSON(
       key,
       simpleQueueType
     );
-    const consumerTag = await channel.consume(queue.queue, (message) => {
+
+    const consumerTag = await channel.consume(queue.queue, async (message) => {
       console.log("message incoming");
       if (message !== null) {
         try {
           const parsedMessage = JSON.parse(message.content.toString());
-          handler(parsedMessage);
-          channel.ack(message);
+          const ackType = await handler(parsedMessage);
+
+          switch (ackType) {
+            case AckType.Ack:
+              console.log("Acking message");
+              channel.ack(message);
+              break;
+            case AckType.NackRequeue:
+              console.log("Nacking and requeuing message");
+              channel.nack(message, false, true);
+              break;
+            case AckType.NackDiscard:
+              console.log("Nacking and discarding message");
+              channel.nack(message, false, false);
+              break;
+            default:
+              console.error("Unknown ackType, discarding message");
+              channel.nack(message, false, false);
+              break;
+          }
         } catch (err) {
           console.error("Failed to handle message:", err);
+          channel.nack(message, false, true); // Requeue on error
         }
       }
     });
@@ -76,4 +104,4 @@ async function SubscribeJSON(
   }
 }
 
-module.exports = { publishJSON, DeclareAndBind, SubscribeJSON };
+module.exports = { publishJSON, DeclareAndBind, SubscribeJSON, AckType };

@@ -1,10 +1,10 @@
 const gamelogic = require("./../../internal/gamelogic");
 const amqp = require("amqplib");
-const readline = require("readline");
 const {
   publishJSON,
   DeclareAndBind,
   SubscribeJSON,
+  AckType,
 } = require("../../internal/pubsub");
 const { routing, models } = require("./../../internal/routings");
 
@@ -15,6 +15,7 @@ function handlerPause(gameState) {
     console.log("handling pause");
     try {
       gameState.handlePause(playingState);
+      return AckType.Ack;
     } catch (err) {
       console.error("Error handling pause:", err);
     } finally {
@@ -23,11 +24,55 @@ function handlerPause(gameState) {
   };
 }
 
-function handlerMove(gameState) {
-  return function (move) {
+function handlerMove(gameState, connection, username) {
+  return async function (move) {
     try {
       console.log("handling move");
-      gameState.handleMove(move);
+      const moveOutcome = gameState.handleMove(move);
+      if (moveOutcome === gamelogic.MoveOutcome.Safe) {
+        return AckType.Ack;
+      }
+      if (moveOutcome === gamelogic.MoveOutcome.MakeWar) {
+        const attacker = move.player;
+        const defender = gameState.getPlayerSnap();
+
+        const published = await publishJSON(
+          await connection.createChannel(),
+          routing.EXCHANGE_PERIL_TOPIC,
+          `${routing.WAR_RECOGNITIONS_PREFIX}.${username}`,
+          { attacker, defender }
+        );
+        if (published) return AckType.Ack;
+        return AckType.NackRequeue;
+      }
+      return AckType.NackDiscard;
+    } catch (err) {
+      console.error("Error handling move:", err);
+    } finally {
+      console.log("\n> ");
+    }
+  };
+}
+
+function handlerWar(gameState) {
+  return async function (wr) {
+    try {
+      console.log("handling war");
+      const warOutcome = gameState.handleWar(wr);
+      console.log(warOutcome, gamelogic.WarOutcome);
+      if (warOutcome[0] === gamelogic.WarOutcome.NotInvolved) {
+        console.log("requeuing");
+        return AckType.NackRequeue;
+      }
+
+      if (
+        warOutcome[0] === gamelogic.WarOutcome.YouWon ||
+        warOutcome[0] === gamelogic.WarOutcome.OpponentWon ||
+        warOutcome[0] === gamelogic.WarOutcome.Draw
+      ) {
+        return AckType.Ack;
+      }
+      return AckType.NackDiscard;
     } catch (err) {
       console.error("Error handling move:", err);
     } finally {
@@ -62,6 +107,14 @@ async function main() {
     await DeclareAndBind(
       connection,
       routing.EXCHANGE_PERIL_TOPIC,
+      routing.WAR_RECOGNITIONS_PREFIX,
+      `${routing.WAR_RECOGNITIONS_PREFIX}.${username}`,
+      "durable"
+    );
+
+    await DeclareAndBind(
+      connection,
+      routing.EXCHANGE_PERIL_TOPIC,
       `${routing.ARMY_MOVES_PREFIX}.${username}`,
       `${routing.ARMY_MOVES_PREFIX}.*`,
       "transient"
@@ -84,7 +137,16 @@ async function main() {
       `${routing.ARMY_MOVES_PREFIX}.${username}`,
       `${routing.ARMY_MOVES_PREFIX}.*`,
       "transient",
-      handlerMove(GameState)
+      handlerMove(GameState, connection, username)
+    );
+
+    await SubscribeJSON(
+      connection,
+      routing.EXCHANGE_PERIL_TOPIC,
+      routing.WAR_RECOGNITIONS_PREFIX,
+      `${routing.WAR_RECOGNITIONS_PREFIX}.${username}`,
+      "durable",
+      handlerWar(GameState)
     );
 
     let continueLoop = true;
@@ -103,7 +165,8 @@ async function main() {
         case "move":
           try {
             const move = GameState.commandMove(words);
-            publishJSON(
+            // move.player.units = Array.from(move.player.units.entries());
+            await publishJSON(
               await connection.createChannel(),
               routing.EXCHANGE_PERIL_TOPIC,
               `${routing.ARMY_MOVES_PREFIX}.${username}`,
