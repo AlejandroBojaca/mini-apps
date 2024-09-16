@@ -1,5 +1,8 @@
 const gamelogic = require("./../../internal/gamelogic");
 const amqp = require("amqplib");
+const fs = require("node:fs/promises");
+const path = require("node:path");
+
 const {
   publishJSON,
   DeclareAndBind,
@@ -54,30 +57,60 @@ function handlerMove(gameState, connection, username) {
   };
 }
 
-function handlerWar(gameState) {
+function handlerWar(gameState, connection, username) {
   return async function (wr) {
     try {
       console.log("handling war");
       const warOutcome = gameState.handleWar(wr);
-      console.log(warOutcome, gamelogic.WarOutcome);
+
       if (warOutcome[0] === gamelogic.WarOutcome.NotInvolved) {
         console.log("requeuing");
         return AckType.NackRequeue;
       }
+      const publishLogMessage = async (msg) => {
+        const published = await publishJSON(
+          await connection.createChannel(),
+          routing.EXCHANGE_PERIL_TOPIC,
+          `${routing.GAME_LOG_SLUG}.${username}`,
+          msg
+        );
+        if (published) console.log("Successfully published log message");
+      };
+      const handleWarOutcome = (outcome, winner, loser) => {
+        const messages = {
+          [gamelogic.WarOutcome.YouWon]: `${winner} won a war against ${loser}`,
+          [gamelogic.WarOutcome
+            .OpponentWon]: `${loser} won a war against ${winner}`,
+          [gamelogic.WarOutcome
+            .Draw]: `War between ${winner} and ${loser} ended in a draw`,
+        };
+        return messages[outcome];
+      };
 
-      if (
-        warOutcome[0] === gamelogic.WarOutcome.YouWon ||
-        warOutcome[0] === gamelogic.WarOutcome.OpponentWon ||
-        warOutcome[0] === gamelogic.WarOutcome.Draw
-      ) {
+      const logMessage = handleWarOutcome(
+        warOutcome[0],
+        warOutcome[1],
+        warOutcome[2]
+      );
+      if (logMessage) {
+        await publishLogMessage(logMessage);
         return AckType.Ack;
       }
+
       return AckType.NackDiscard;
     } catch (err) {
       console.error("Error handling move:", err);
     } finally {
       console.log("\n> ");
     }
+  };
+}
+
+function handlerLog() {
+  return async function (msg) {
+    await fs.appendFile(path.join(__dirname, "war.log"), msg);
+    console.log("Successfully appended log to log file");
+    return AckType.Ack;
   };
 }
 
@@ -146,7 +179,16 @@ async function main() {
       routing.WAR_RECOGNITIONS_PREFIX,
       `${routing.WAR_RECOGNITIONS_PREFIX}.${username}`,
       "durable",
-      handlerWar(GameState)
+      handlerWar(GameState, connection, username)
+    );
+
+    await SubscribeJSON(
+      connection,
+      routing.EXCHANGE_PERIL_TOPIC,
+      routing.GAME_LOG_SLUG,
+      `${routing.GAME_LOG_SLUG}.*`,
+      "durable",
+      handlerLog(GameState)
     );
 
     let continueLoop = true;
@@ -165,7 +207,6 @@ async function main() {
         case "move":
           try {
             const move = GameState.commandMove(words);
-            // move.player.units = Array.from(move.player.units.entries());
             await publishJSON(
               await connection.createChannel(),
               routing.EXCHANGE_PERIL_TOPIC,
@@ -193,7 +234,20 @@ async function main() {
           break;
         case "spam":
           try {
-            console.log("Spamming not allowed yet");
+            if (words[1] === "" || isNaN(Number(words[1]))) {
+              console.log("Provide valid arguments");
+              continue;
+            }
+            console.log("Spamming logs");
+            for (let i = 0; i < words[1]; i++) {
+              const maliciousLog = gamelogic.getMaliciousLog();
+              await publishJSON(
+                await connection.createChannel(),
+                routing.EXCHANGE_PERIL_TOPIC,
+                `${routing.GAME_LOG_SLUG}.${username}`,
+                maliciousLog
+              );
+            }
           } catch (e) {
             console.log(e.message);
           }
