@@ -6,6 +6,9 @@ const { nanoid } = require("nanoid");
 const { ObjectId } = require("mongodb");
 const multer = require("multer");
 const upload = multer();
+const Os = require("node:os");
+
+console.log(Os.cpus());
 
 mongoose.connect("mongodb://127.0.0.1:27017/test");
 
