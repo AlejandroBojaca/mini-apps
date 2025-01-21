@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <h1>WELCOME TO MY PAGE</h1>
+    <form action="/" method="post">
+      <h2>Save to cache</h2>
+      <input name="value" type="text" placeholder="Value to save" />
+      <input type="submit" value="Submit" />
+    </form>
+    <h1>Check if value is in cache:</h1>
+    <form action="/check" method="post">
+      <input name="value" type="text" placeholder="Value to check" />
+      <input type="submit" value="Submit" />
+    </form>
+  </body>
+</html>
